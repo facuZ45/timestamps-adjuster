@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Timestamps Adjuster</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Ajustador de Timestamps</h1>
+        <textarea id="input" rows="10" cols="50" placeholder="Pega aquí los timestamps..."></textarea><br>
+        <div class="button-container">
+            <button id="btn-sound" onclick="ajustarTimestamps()">Convertir!</button>
+            <audio id="audio" src="sound/pepsi.mp3" preload="auto"></audio>
+            <button onclick="copiarAlPortapapeles()">Copiar wacho!</button>
+        </div>
+        <h2>Resultado</h2>
+        <div id="output-container">
+            <pre id="output"></pre>
+        </div>
+        <div id="popup" class="popup">
+            <p>Buen trabajo! Sigue asi!</p>
+            <img src="img/MOMO.png" alt="MOMO" class="popup-image">
+        </div>
+    </div>
+
+    <script>
+        function ajustarTimestamps() {
+            const button = document.getElementById('btn-sound');
+            const sound = document.getElementById('audio');
+            sound.play();                
+
+            const input = document.getElementById("input").value;
+            const output = document.getElementById("output");
+
+            // Regex para dividir en líneas y extraer tiempos y descripciones
+            const lines = input.trim().split("\n");
+            const timestamps = lines.map(line => {
+                const [time, ...desc] = line.split(" ");
+                const timeParts = time.split(":").map(Number);
+
+                // Convertir el tiempo a segundos según el formato detectado
+                let timeInSeconds;
+                if (timeParts.length === 3) {
+                    // Formato HH:MM:SS
+                    const [hours, minutes, seconds] = timeParts;
+                    timeInSeconds = hours * 3600 + minutes * 60 + seconds;
+                } else if (timeParts.length === 2) {
+                    // Formato MM:SS
+                    const [minutes, seconds] = timeParts;
+                    timeInSeconds = minutes * 60 + seconds;
+                }
+                
+                return {
+                    timeInSeconds,
+                    description: desc.join(" ")
+                };
+            });
+
+            if (timestamps.lenght === 0) {
+                output.textContent = "NO HAY TIMESTAMPS";
+                return;
+            }
+
+            // Calculamos el tiempo base
+            const baseTime = timestamps[0].timeInSeconds;
+
+            // Ajustamos cada timestamp al tiempo relativo y formateamos
+            const adjustedTimestamps = timestamps.map(({ timeInSeconds, description }) => {
+                const relativeTime = timeInSeconds - baseTime;
+                const hours = Math.floor(relativeTime / 3600);
+                const minutes = Math.floor((relativeTime % 3600) / 60);
+                const seconds = relativeTime % 60;
+                return `${hours.toString()}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")} ${description}`;
+            });
+
+            // Mostramos el resultado
+            output.textContent = adjustedTimestamps.join("\n");
+        }
+
+        function copiarAlPortapapeles() {
+            const output = document.getElementById("output").textContent;
+
+            navigator.clipboard.writeText(output).then(() => {
+                const popup = document.getElementById("popup");
+                popup.style.display = "block";
+                setTimeout(() => {
+                    popup.style.display = "none";
+                }, 2000); // Ocultar después de 2 segundos
+            }).catch(err => {
+                alert("Error al copiar al portapapeles: " + err);
+            });
+        }
+    </script>
+</body>
+
+</html>
